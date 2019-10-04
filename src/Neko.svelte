@@ -9,8 +9,6 @@
   export let scale = 1.0;
 </script>
 
-{@debug name}
-
 <div data-sevenup="{name}" style="transform-origin: top left; transform: translate({position.left}px, {position.top}px) scale({scale})"></div>
 
 <style>

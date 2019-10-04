@@ -288,6 +288,7 @@ class MusicModel extends M {
     let neko = this.nekos[mouse.id];
     if (!neko) {
       console.log("something else is wrong");
+      return;
     }
     neko.update(mouse);
     return mouse;
@@ -335,8 +336,6 @@ class NekoModel {
 
     this.speed = init.speed || (1 / 75);
     this.size = init.size || (32 / 800);
-
-    window.views.push(this);
 
     // default stage width = 800px. neko is 32px.
     // Let us say that the apparent size of a neko on screen is 1/25th, and speed is 1/75th
@@ -523,6 +522,7 @@ class MusicView extends V {
        clearInterval(this.updateMouse);
        this.updateMouse = null;
     }
+    updateNekos([]);
   }
 
   dispatch(arg) {
