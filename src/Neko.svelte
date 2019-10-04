@@ -12,7 +12,7 @@
 <div data-sevenup="{name}" style="transform-origin: top left; transform: translate({position.left}px, {position.top}px) scale({scale})"></div>
 
 <style>
-  [data-sevenup] { background-image: url('/neko-tora.png'); background-size: 192px 192px}
+  [data-sevenup] { background-image: url('/img/neko-tora.png'); background-size: 192px 192px}
   [data-sevenup="awake"] { width: 32px; height: 32px; background-position: 0px 0px }
   [data-sevenup="down1"] { width: 32px; height: 32px; background-position: -32px 0px }
   [data-sevenup="down2"] { width: 32px; height: 32px; background-position: 0px -32px }
