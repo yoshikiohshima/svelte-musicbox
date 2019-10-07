@@ -1,5 +1,5 @@
 <script>
-export let theView;
+export let session;
 
 export let isPart;
 export let id;
@@ -47,9 +47,9 @@ class DocMouseCapture {
   }
 }
 
-function dragger(view, id) {
+function dragger(session, id) {
   let clickState;
-  let updater = (obj) => {if (view) {view.dispatch(obj)}};
+  let updater = (obj) => {if (session.view) {session.view.dispatch(obj);}};
 
   function mouseDown(evt) {
     let target = evt.target;
@@ -85,9 +85,9 @@ function dragger(view, id) {
   return mouseDown;
 }
 
-function bePart(view, id) {
+function bePart(session, id) {
   let clickState;
-  let updater = (obj) => view.dispatch(obj);
+  let updater = (obj) => session.view.dispatch(obj);
 
   let state = 'none'; // or 'moved', or 'down'
   function mouseDown(evt) {
@@ -117,7 +117,7 @@ function bePart(view, id) {
     } else {
       obj.message = 'move';
     }
-    view.dispatch(obj);
+    updater(obj);
   }
 
   function mouseUp(evt) {
@@ -133,9 +133,9 @@ function bePart(view, id) {
 </script>
 
 {#if isPart}
-  <div class="piece part" id={id} on:mousedown={bePart(theView, id)} />
+  <div class="piece part" id={id} on:touchstart={bePart(session, id)} on:mousedown={bePart(session, id)} />
 {:else}
-  <div class="piece" key={id} style="left: {left}px; top: {top}px" on:mousedown={dragger(theView, id)} />
+  <div class="piece" key={id} style="left: {left}px; top: {top}px" on:touchstart={dragger(session, id)} on:mousedown={dragger(session, id)} />
 {/if}
 
 <style>

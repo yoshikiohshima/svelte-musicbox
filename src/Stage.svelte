@@ -3,7 +3,7 @@ import Bar from './Bar.svelte';
 import Ball from './Ball.svelte';
 import Neko from './Neko.svelte';
 
-export let theView;
+export let session;
 export let balls = [];
 export let nekos = [];
 export let barPos = 0;
@@ -14,7 +14,7 @@ export let stageWidth;
 
 <div class={"stage"}>
   {#each balls as ball (ball.id)}
-    <Ball theView={theView} id={ball.id} left={ball.left} top={ball.top}/>
+    <Ball session={session} id={ball.id} left={ball.left} top={ball.top}/>
   {/each}
   {#each nekos as neko (neko.id)}
     <Neko id={neko.id} name={neko.name} state={neko.state} position={neko.position} frame={neko.frame} bound={neko.bound} dir={neko.dir} scale={stageWidth === 800 ? 1 : 0.5}/>

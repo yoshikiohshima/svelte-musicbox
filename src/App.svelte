@@ -6,9 +6,8 @@ import Ball from './Ball.svelte';
 
 import {Model, View, startSession} from '@croquet/croquet';
 
-let isLocal = false; 
-let mockReflector;
-let theView;
+let isLocal = false;
+let session;
 let grid = false;
 
 let stageWidth = 800;
@@ -118,7 +117,8 @@ function makeMockReflector() {
   
   mockReflector.frame.bind(mockReflector)();
 
-  theView = v;
+  mockReflector;
+  return mockReflector;
 }
 
 function stof(s) {
@@ -198,8 +198,8 @@ class MockModel {
   init() {}
   subscribe() {}
   publish(id, message, data) {
-    if (theView) {
-      theView.dispatch(data);
+    if (session.view) {
+      session.view.dispatch(data);
     }
   }
 
@@ -228,7 +228,9 @@ class MusicModel extends M {
           let {position, state, frame, inState, dir, bound} = c;
           return {position, state, frame, inState, dir, bound};
         },
-        read: (obj) => {return new NekoModel(obj)}
+        read: (obj) => {
+          return new NekoModel(obj);
+	}
       }
     }
   }
@@ -237,6 +239,7 @@ class MusicModel extends M {
     super.init();
     this.notes = makeDefault(); // {id, x, f}
     this.nekos = {}; // {id: {id, position, state, inState}}
+    this.mice = {}; // {id: left, top};
     
     this.messages = {
       'add':  'handlePieceAdded',
@@ -271,20 +274,23 @@ class MusicModel extends M {
     let neko = this.nekos[viewId];
     if (neko) {
       console.log("something is wrong");
+    } else {
+      this.nekos[viewId] = new NekoModel({});
     }
-    this.nekos[viewId] = new NekoModel({});
   }
 
   viewExit(viewId) {
+    delete this.nekos[viewId];
+    delete this.mice[viewId];
     this.dispatch({message: 'exit', id: viewId});
   }
 
   handleExit(arg) {
-    delete this.nekos[arg.id];
     return {message: 'nekoUpdate'};
   }
 
   handleNekoUpdate(mouse) {
+    this.mice[mouse.id] = mouse;
     let neko = this.nekos[mouse.id];
     if (!neko) {
       console.log("something else is wrong");
@@ -512,9 +518,8 @@ class MusicView extends V {
 
     this.clickId = null;
     soundStoppedByUser = false;
-    this.mouse = {left: 0.5, top: 0.25, id: this.viewId};
-
-    this.updateMouse = setInterval(() => this.dispatch({message: 'mouseState'}), 100);
+    this.mouse = model.mice[this.viewId] || {left: 0.5, top: 0.25, id: this.viewId};
+    this.updateMouse = setInterval(() => {this.dispatch({message: 'mouseState'});}, 100);
   }
 
   detach() {
@@ -522,7 +527,6 @@ class MusicView extends V {
        clearInterval(this.updateMouse);
        this.updateMouse = null;
     }
-    updateNekos([]);
   }
 
   dispatch(arg) {
@@ -739,26 +743,50 @@ function disallowSound() {
 }
 
 function resetBalls() {
-  if (theView) {
-    theView.dispatch({message: 'requestReset'})
+  if (session.view) {
+    session.view.dispatch({message: 'requestReset'})
   }
 }
 
 async function start() {
   if (isLocal) {
-    makeMockReflector();
-    theView.handlePieceUpdated();
+    session = makeMockReflector();
+    session.view.handlePieceUpdated();
     return Promise.resolve('local');
   } else {
-    let session = await startSession("Music", MusicModel, MusicView, {tps: 20});
+    session = await startSession("Music", MusicModel, MusicView, {tps: 20});
     window.models.push(session.model);
-    window.views.push(session.view);
-    theView = session.view;
-    theView.handlePieceUpdated();
+    
+    session.view.handlePieceUpdated();
     return Promise.resolve('remote');
   }
 }
 </script>
+
+{#await start()}
+<p> Waiting</p>
+{:then}
+<div>
+  <button bind:this={enableButton} on:click={allowSound}>Enable Audio</button>
+  <button on:click={disallowSound}>Disable Audio</button>
+  <button on:click={resetBalls}>Reset</button>
+  <input type="checkbox" bind:checked={grid}/>
+
+  <div bind:this={horizontal} class="horizontal">
+    <Stage session={session} balls={balls} nekos={nekos} barPos={barPos} stageWidth={stageWidth} stageHeight={stageHeight}></Stage>
+    <div class="tools">
+      <div bind:this={partsBin} class="partsBin">
+        <Ball session={session} isPart={true} id='part'/>
+      </div>
+      <div class="trashholder">
+        <div class="trash"></div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow arrowFade" bind:this={tapHere}>← Tap Here!</div>
+</div>
+{/await}
+
 
 <style>
 .horizontal {
@@ -836,30 +864,5 @@ async function start() {
   background-size: 25px 25px;
 }
 }
-
-
 </style>
 
-{#await start()}
-<p> Waiting</p>
-{:then}
-<div>
-  <button bind:this={enableButton} on:click={allowSound}>Enable Audio</button>
-  <button on:click={disallowSound}>Disable Audio</button>
-  <button on:click={resetBalls}>Reset</button>
-  <input type="checkbox" bind:checked={grid}/>
-
-  <div bind:this={horizontal} class="horizontal">
-    <Stage theView={theView} balls={balls} nekos={nekos} barPos={barPos} stageWidth={stageWidth} stageHeight={stageHeight}></Stage>
-    <div class="tools">
-      <div bind:this={partsBin} class="partsBin">
-        <Ball theView={theView} isPart={true} id='part'/>
-      </div>
-      <div class="trashholder">
-        <div class="trash"></div>
-      </div>
-    </div>
-  </div>
-  <div class="arrow arrowFade" bind:this={tapHere}>← Tap Here!</div>
-</div>
-{/await}

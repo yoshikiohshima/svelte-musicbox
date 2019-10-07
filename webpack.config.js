@@ -8,7 +8,6 @@ const prod = mode === 'production';
 const IMG = path.resolve(__dirname, 'img');
 const PUBLIC = path.resolve(__dirname, 'public');
 
-
 module.exports = {
 	entry: {
 		bundle: ['./src/main.js']
@@ -47,9 +46,9 @@ module.exports = {
 					prod ? MiniCssExtractPlugin.loader : 'style-loader',
 					'css-loader'
 				]
-			}
+			},
 		]
-	},
+        },
 	mode,
 	plugins: [
 		new MiniCssExtractPlugin({
