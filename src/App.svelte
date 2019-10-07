@@ -8,7 +8,9 @@ import {Model, View, startSession} from '@croquet/croquet';
 
 let isLocal = false;
 let session;
+
 let grid = false;
+let gridText = 'Griding Off';
 
 let stageWidth = 800;
 let stageHeight = 300;
@@ -576,7 +578,7 @@ class MusicView extends V {
       let x = (posx - stageBorder) / (stageWidth - ballSize);
       let p = ((stageHeight - ballSize) - (posy - stageBorder)) / (stageHeight - ballSize);
 
-      if (grid.checked) {
+      if (grid) {
         x = Math.floor(x * 32) / 32;
         p = Math.floor(p * 12) / 12;
       }
@@ -748,6 +750,15 @@ function resetBalls() {
   }
 }
 
+function toggleGrid() {
+  grid = !grid;
+  if (grid) {
+    gridText = 'Grid On';
+  } else {
+    gridText = 'Grid Off';
+  }
+}
+
 async function start() {
   if (isLocal) {
     session = makeMockReflector();
@@ -770,7 +781,7 @@ async function start() {
   <button bind:this={enableButton} on:click={allowSound}>Enable Audio</button>
   <button on:click={disallowSound}>Disable Audio</button>
   <button on:click={resetBalls}>Reset</button>
-  <input type="checkbox" bind:checked={grid}/>
+  <button on:click={toggleGrid}>{gridText}</button>
 
   <div bind:this={horizontal} class="horizontal">
     <Stage session={session} balls={balls} nekos={nekos} barPos={barPos} stageWidth={stageWidth} stageHeight={stageHeight}></Stage>
@@ -786,7 +797,7 @@ async function start() {
   <div class="arrow arrowFade" bind:this={tapHere}>← Tap Here!</div>
 </div>
 {/await}
-
+<div id='qrcode'></div>
 
 <style>
 .horizontal {

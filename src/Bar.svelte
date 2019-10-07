@@ -18,6 +18,4 @@ export let stageHeight;
 }
 </style>
 
-<div class="bar" style="left: {ratio * stageWidth}px; top: 0px; height: {stageHeight}px"></div>
-
-
+<div class="bar" style="display: {ratio > 1.0 ? 'none' : 'inherit'}; left: {ratio * stageWidth}px; top: 0px; height: {stageHeight}px"></div>
