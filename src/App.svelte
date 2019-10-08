@@ -114,12 +114,11 @@ function makeMockReflector() {
   m.init();
   let v = new MusicView(m);
   
-  mockReflector = new MockReflector(m, v);
+  let mockReflector = new MockReflector(m, v);
   m.viewJoin(v.id);
   
   mockReflector.frame.bind(mockReflector)();
 
-  mockReflector;
   return mockReflector;
 }
 
@@ -200,7 +199,7 @@ class MockModel {
   init() {}
   subscribe() {}
   publish(id, message, data) {
-    if (session.view) {
+    if (session && session.view) {
       session.view.dispatch(data);
     }
   }
@@ -257,6 +256,7 @@ class MusicModel extends M {
     this.subscribe(this.sessionId, "view-exit", this.viewExit);
 
     this.future(2000).tick();
+    this.future(100).mouse();
   }
 
   dispatch(arg) {
@@ -266,7 +266,7 @@ class MusicModel extends M {
     let value = this[mth](arg);
     if (value === undefined) {return undefined;}
     if (isLocal) {
-      mockReflector.view.dispatch(value);
+      session.view.dispatch(value);
     } else {
       this.publish(this.id, "message-m", value);
     }
@@ -278,6 +278,7 @@ class MusicModel extends M {
       console.log("something is wrong");
     } else {
       this.nekos[viewId] = new NekoModel({});
+      this.mice[viewId] = {viewId: viewId, left: 0.5, top: 0.2};
     }
   }
 
@@ -291,15 +292,8 @@ class MusicModel extends M {
     return {message: 'nekoUpdate'};
   }
 
-  handleNekoUpdate(mouse) {
-    this.mice[mouse.id] = mouse;
-    let neko = this.nekos[mouse.id];
-    if (!neko) {
-      console.log("something else is wrong");
-      return;
-    }
-    neko.update(mouse);
-    return mouse;
+  handleNekoUpdate(arg) {
+    return arg;
   }
 
   handlePieceAdded(info) {
@@ -311,6 +305,7 @@ class MusicModel extends M {
 
   handlePieceMoved(arg) {
     this.notes[arg.id] = {x: arg.x, f: arg.f, id: arg.id};
+    this.mice[arg.viewId] = {left: arg.left, top: arg.top, viewId: arg.viewId};
     return {message: 'update'};
   }
 
@@ -327,6 +322,18 @@ class MusicModel extends M {
   tick() {
     this.publish(this.id, 'message-m', {message: 'wrap'});
     this.future(2000).tick();
+  }
+
+  mouse() {
+    for (let k in this.nekos) {
+      let neko = this.nekos[k];
+      let mouse = this.mice[k];
+      if (neko && mouse) {
+        neko.update(mouse);
+      }
+    }
+    this.dispatch({message: 'nekoUpdate'});
+    this.future(100).mouse();
   }
 }
 
@@ -520,8 +527,6 @@ class MusicView extends V {
 
     this.clickId = null;
     soundStoppedByUser = false;
-    this.mouse = model.mice[this.viewId] || {left: 0.5, top: 0.25, id: this.viewId};
-    this.updateMouse = setInterval(() => {this.dispatch({message: 'mouseState'});}, 100);
   }
 
   detach() {
@@ -540,7 +545,7 @@ class MusicView extends V {
 
     if (!value.message) {value.message = arg.message;}
     if (isLocal) {
-      mockReflector.model.dispatch(value);
+      session.model.dispatch(value);
     } else {
       this.publish(this.modelId, "message", value);
     }
@@ -573,7 +578,6 @@ class MusicView extends V {
 
     posx = Math.max(posx, stageBorder);
     posy = Math.min(Math.max(posy, stageBorder), stageHeight - ballSize + stageBorder);
-    this.mouse = {left: posx / stageWidth, top: (posy - (ballSize / 2)) / stageWidth, id: this.viewId};
     let makeParam = () => {
       let x = (posx - stageBorder) / (stageWidth - ballSize);
       let p = ((stageHeight - ballSize) - (posy - stageBorder)) / (stageHeight - ballSize);
@@ -585,7 +589,7 @@ class MusicView extends V {
 
       let f = ptof(p);
 
-      return {id: this.clickId, x, f, message: 'move'};
+      return {id: this.clickId, x, f, message: 'move', left: posx / stageWidth, top: (posy - (ballSize / 2)) / stageWidth, viewId: this.viewId};
     }
     this.lastTouchX = screenX;
     return makeParam();
@@ -656,7 +660,7 @@ class MusicView extends V {
   }
     
   handleReset() {
-    disallowSound();
+    //disallowSound();
     soundStoppedByUser = false;
     this.handlePieceUpdated();
   }
@@ -772,8 +776,10 @@ async function start() {
     return Promise.resolve('remote');
   }
 }
+
 </script>
 
+<h1>Music Cat!</h1>
 {#await start()}
 <p> Waiting</p>
 {:then}
@@ -798,6 +804,7 @@ async function start() {
 </div>
 {/await}
 <div id='qrcode'></div>
+<a style="position: absolute; top: 0px; right: 0px;" href="https://github.com/yoshikiohshima/svelte-musicbox" target="_blank" rel="noopener noreferrer"><img width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_red_aa0000.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
 
 <style>
 .horizontal {
