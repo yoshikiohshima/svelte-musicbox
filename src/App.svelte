@@ -298,7 +298,7 @@ class MusicModel extends M {
 
   handlePieceAdded(info) {
     let id = newId();
-    let note = {x: info.ratioX, f: ptof(info.ratioY), id: id};
+    let note = {id: id, x: info.ratioX, f: ptof(info.ratioY)};
     this.notes[id] = note;
     return Object.assign({}, info, {id: id, 'message': 'add'});
   }
@@ -628,27 +628,24 @@ class MusicView extends V {
   partsAdd(evt) {
     let origRect = horizontal.getBoundingClientRect();
     let partRect = partsBin.firstChild.getBoundingClientRect();
-
     let ratioX = (partRect.left - origRect.left + ballSize) / stageWidth;
-
     let clickY = (evt.touches && evt.touches[0] ? evt.touches[0] : evt)["screenY"];
     let posy = (evt.screenY - clickY) + (partRect.top - origRect.top);
-    let p = 1 - ((posy - stageBorder) / (stageHeight - ballSize));
+    let p = 1.0 - ((posy - stageBorder) / (stageHeight - ballSize));
+
+    this.clickInfo = {
+      clickX: (evt.touches && evt.touches[0] ? evt.touches[0] : evt)["screenX"],
+      clickY: (evt.touches && evt.touches[0] ? evt.touches[0] : evt)["screenY"],
+      origX: ratioX * stageWidth - ballSize,
+      origY: ballSize / 2,
+    };
 
     return {message: 'add', ratioX: ratioX, ratioY: p, touches: evt.touches, screenX: evt.screenX, screenY: evt.screenY};
   }
 
   pieceAdded(evt) {
-    let id = evt.id;
+    this.clickId = evt.id;
     updateBalls(this.pieces(this.model.notes));
-
-    this.clickId = id;
-    this.clickInfo = {
-      clickX: (evt.touches && evt.touches[0] ? evt.touches[0] : evt)["screenX"],
-      clickY: (evt.touches && evt.touches[0] ? evt.touches[0] : evt)["screenY"],
-      origX: evt.ratioX * stageWidth - ballSize,
-      origY: ballSize / 2,
-    };
   }
 
   requestReset() {
@@ -854,7 +851,7 @@ async function start() {
   background-color: gray;
   position: absolute;
   left: 200px;
-  top: 10px;
+  top: 80px;
   border-radius: 5px;
   margin: 3px;
 }

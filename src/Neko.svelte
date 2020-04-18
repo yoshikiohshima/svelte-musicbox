@@ -1,10 +1,6 @@
 <script>
   export let id;
-  export let state;
   export let position;
-  export let frame;
-  export let bound;
-  export let dir;
   export let name;
   export let scale = 1.0;
 </script>
