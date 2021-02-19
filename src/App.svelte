@@ -530,6 +530,7 @@ class MusicView extends V {
   }
 
   detach() {
+    super.detach();
     if (this.updateMosue !== null) {
        clearInterval(this.updateMouse);
        this.updateMouse = null;
